@@ -8,4 +8,4 @@ RTCTP Store
 `go run *.go`
 
 ## Test
-`go test`
+`go test *.go`
