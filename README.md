@@ -7,8 +7,8 @@ RTCTP Store
 ## Install dependencies
 `go get`
 
-## Run
-`go run *.go`
+## Build & Run
+`go build && ./rtctp-store`
 
 ## Test
 `go test *.go`
