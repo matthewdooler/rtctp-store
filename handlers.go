@@ -5,6 +5,13 @@ import (
 	"encoding/json"
 )
 
+type Link struct {
+    Rel      string    `json:"rel"`
+    Href     string    `json:"href"`
+}
+
+type Links []Link
+
 func Index(w http.ResponseWriter, r *http.Request) {
     links := Links{
         Link{Rel: "self", Href: config.BaseURI+"/"},
@@ -17,6 +24,10 @@ func Index(w http.ResponseWriter, r *http.Request) {
     if err := json.NewEncoder(w).Encode(links); err != nil {
         panic(err)
     }
+}
+
+type Status struct {
+    Status      string    `json:"status"`
 }
 
 func StatusIndex(w http.ResponseWriter, r *http.Request) {
