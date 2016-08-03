@@ -1,1 +1,2 @@
 technical indicators as mixins
+add `go vet ./...` to .travis.yml
