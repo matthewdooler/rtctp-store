@@ -1,7 +1,7 @@
 # rtctp-store
 RTCTP Store
 
-[![Build Status](https://travis-ci.org/matthewdooler/rtctp-store.svg?branch=master)](https://travis-ci.org/matthewdooler/rtctp-store
+[![Build Status](https://travis-ci.org/matthewdooler/rtctp-store.svg?branch=master)](https://travis-ci.org/matthewdooler/rtctp-store)
 ![](https://img.shields.io/badge/license-MIT-blue.svg)
 
 ## Install dependencies
