@@ -1,7 +1,7 @@
 package main
 
 type Instrument struct {
-    Epic      string    `json:"epic"`
+    Id      string    `json:"id"`
 }
 
 type Instruments []Instrument

@@ -23,7 +23,13 @@ var routes = Routes{
         Index,
     },
     Route{
-        "Instruments",
+        "StatusIndex",
+        "GET",
+        "/status",
+        StatusIndex,
+    },
+    Route{
+        "InstrumentsIndex",
         "GET",
         "/instruments",
         InstrumentsIndex,
