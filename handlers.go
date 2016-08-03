@@ -6,11 +6,10 @@ import (
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
-    baseuri := "http://127.0.0.1:8042" // TODO: needs to be in config
     links := Links{
-        Link{Rel: "self", Href: baseuri+"/"},
-        Link{Rel: "status", Href: baseuri+"/status"},
-        Link{Rel: "instruments", Href: baseuri+"/instruments"},
+        Link{Rel: "self", Href: config.BaseURI+"/"},
+        Link{Rel: "status", Href: config.BaseURI+"/status"},
+        Link{Rel: "instruments", Href: config.BaseURI+"/instruments"},
     }
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")

@@ -12,9 +12,11 @@ type Configuration struct {
     BaseURI     string
 }
 
+var config Configuration
+
 func main() {
 
-    config := loadConfig()
+    config = loadConfig()
     router := NewRouter()
 
     log.Fatal(http.ListenAndServe(":"+config.Port, router))
