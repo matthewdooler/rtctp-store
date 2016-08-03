@@ -30,7 +30,7 @@ func StatusIndex(w http.ResponseWriter, r *http.Request) {
 
 func InstrumentsIndex(w http.ResponseWriter, r *http.Request) {
     instruments := Instruments{
-        Instrument{Id: "CS.D.GBPUSD.TODAY.IP"},
+        Instrument{Id: "CS.D.GBPUSD.TODAY.IP", Links: instrumentLinks("CS.D.GBPUSD.TODAY.IP")},
     }
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -38,4 +38,14 @@ func InstrumentsIndex(w http.ResponseWriter, r *http.Request) {
     if err := json.NewEncoder(w).Encode(instruments); err != nil {
         panic(err)
     }
+}
+
+func instrumentLinks(id string) Links {
+	links := Links{
+        Link{Rel: "self", Href: config.BaseURI+"/instruments/"+id},
+    }
+	for _,resolution := range resolutions {
+		links = append(links, Link{Rel: resolution, Href: config.BaseURI+"/instruments/"+id+"/"+resolution})
+	}
+	return links
 }
