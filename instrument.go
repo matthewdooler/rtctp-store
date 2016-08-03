@@ -1,5 +1,9 @@
 package main
 
+import (
+    "time"
+)
+
 var resolutions = []string{
     "SECOND",
     "MINUTE",
@@ -20,3 +24,18 @@ type Instrument struct {
 }
 
 type Instruments []Instrument
+
+type Candle struct {
+	Time		time.Time 	`json:"time"`
+	OpenPrice	Quote		`json:"openPrice"`
+	ClosePrice	Quote		`json:"closePrice"`
+	LowPrice	Quote		`json:"lowPrice"`
+	HighPrice	Quote		`json:"highPrice"`
+}
+
+type Candles []Candle
+
+type Quote struct {
+	Ask			float32	`json:"ask"`
+	Bid			float32	`json:"bid"`
+}
