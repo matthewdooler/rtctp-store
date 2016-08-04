@@ -2,9 +2,11 @@ package main
 
 import (
     "net/http"
-	"encoding/json"
+    "encoding/json"
+    "math/rand"
+    "time"
 
-	"github.com/gorilla/mux"
+    "github.com/gorilla/mux"
 )
 
 type Link struct {
@@ -79,12 +81,23 @@ func InstrumentController(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+func getCandles(instrumentId string, resolution string) Candles {
+    // TODO: Retrieve candles from database
+    var quote = Quote{Ask: rand.Float32()*1000, Bid: rand.Float32()*1000}
+    return Candles{
+        Candle{Time: time.Now(), OpenPrice: quote, ClosePrice: quote, LowPrice: quote, HighPrice: quote},
+    }
+}
+
 func ResolutionController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     var instrumentId string = vars["instrumentId"]
     var resolution string = vars["resolution"]
     var instrument = getInstrument(instrumentId)
-    var response = Resolution{Instrument: instrument, Resolution: resolution}
+    // TODO: Pass in current time as end, and start=end-(resolution*10) (i.e., the past 10 candles)
+    // TODO: Controller that takes start and end date
+    var candles = getCandles(instrumentId, resolution)
+    var response = Resolution{Instrument: instrument, Resolution: resolution, Candles: candles}
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)

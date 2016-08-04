@@ -43,4 +43,5 @@ type Quote struct {
 type Resolution struct {
 	Instrument Instrument `json:"instrument"`
 	Resolution string     `json:"resolution"`
+	Candles Candles       `json:"candles"`
 }
