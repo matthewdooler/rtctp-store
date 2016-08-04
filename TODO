@@ -1,3 +1,6 @@
 technical indicators as mixins
+
 add `go vet ./...` to .travis.yml
 swagger api docs
+
+attempts to GET price data at a given resolution should search smaller resolutions to find contiguous data that can service parts (or all!) of the requested range
