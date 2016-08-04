@@ -41,9 +41,15 @@ var routes = Routes{
         InstrumentController,
     },
     Route{
-        "Resolution",
+        "Candles",
         "GET",
         "/instruments/{instrumentId}/{resolution}",
-        ResolutionController,
+        AllCandlesController,
+    },
+    Route{
+        "Candles",
+        "GET",
+        "/instruments/{instrumentId}/{resolution}/{startDate}/{endDate}",
+        RangeCandlesController,
     },
 }

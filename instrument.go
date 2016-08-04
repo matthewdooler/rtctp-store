@@ -40,7 +40,7 @@ type Quote struct {
 	Bid float32	`json:"bid"`
 }
 
-type Resolution struct {
+type CandlesResponse struct {
 	Instrument Instrument `json:"instrument"`
 	Resolution string     `json:"resolution"`
 	Candles Candles       `json:"candles"`

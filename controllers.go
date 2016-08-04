@@ -63,6 +63,7 @@ func instrumentLinks(id string) Links {
 	var links = Links{
         Link{Rel: "self", Href: config.BaseURI+"/instruments/"+id},
     }
+    // TODO: Query database to get all resolutions (don't have to be specific to this instrument - could just be a globally collected list)
 	for _,resolution := range resolutions {
 		links = append(links, Link{Rel: resolution, Href: config.BaseURI+"/instruments/"+id+"/"+resolution})
 	}
@@ -81,23 +82,55 @@ func InstrumentController(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func getCandles(instrumentId string, resolution string) Candles {
+func getCandles(instrumentId string, resolution string, startDate time.Time, endDate time.Time) Candles {
     // TODO: Retrieve candles from database
     var quote = Quote{Ask: rand.Float32()*1000, Bid: rand.Float32()*1000}
     return Candles{
         Candle{Time: time.Now(), OpenPrice: quote, ClosePrice: quote, LowPrice: quote, HighPrice: quote},
+        Candle{Time: time.Now(), OpenPrice: quote, ClosePrice: quote, LowPrice: quote, HighPrice: quote},
+        Candle{Time: time.Now(), OpenPrice: quote, ClosePrice: quote, LowPrice: quote, HighPrice: quote},
+        Candle{Time: time.Now(), OpenPrice: quote, ClosePrice: quote, LowPrice: quote, HighPrice: quote},
+        Candle{Time: time.Now(), OpenPrice: quote, ClosePrice: quote, LowPrice: quote, HighPrice: quote},
     }
 }
 
-func ResolutionController(w http.ResponseWriter, r *http.Request) {
+func AllCandlesController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     var instrumentId string = vars["instrumentId"]
     var resolution string = vars["resolution"]
     var instrument = getInstrument(instrumentId)
     // TODO: Pass in current time as end, and start=end-(resolution*10) (i.e., the past 10 candles)
-    // TODO: Controller that takes start and end date
-    var candles = getCandles(instrumentId, resolution)
-    var response = Resolution{Instrument: instrument, Resolution: resolution, Candles: candles}
+    var startDate time.Time = time.Now()
+    var endDate time.Time = time.Now()
+    var candles = getCandles(instrumentId, resolution, startDate, endDate)
+    var response = CandlesResponse{Instrument: instrument, Resolution: resolution, Candles: candles}
+
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    w.WriteHeader(http.StatusOK)
+    if err := json.NewEncoder(w).Encode(response); err != nil {
+        panic(err)
+    }
+}
+
+// TODO: Return HTTP error instead of panic
+func RangeCandlesController(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    instrumentId := vars["instrumentId"]
+    resolution := vars["resolution"]
+
+    startDate, err := time.Parse(time.RFC3339, vars["startDate"])
+    if err != nil {
+        panic(err)
+    }
+
+    endDate, err := time.Parse(time.RFC3339, vars["endDate"])
+    if err != nil {
+        panic(err)
+    }
+
+    instrument := getInstrument(instrumentId)
+    candles := getCandles(instrumentId, resolution, startDate, endDate)
+    response := CandlesResponse{Instrument: instrument, Resolution: resolution, Candles: candles}
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
