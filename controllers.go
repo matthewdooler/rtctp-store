@@ -43,7 +43,7 @@ func StatusController(w http.ResponseWriter, r *http.Request) {
 
 func InstrumentsController(w http.ResponseWriter, r *http.Request) {
     var instruments = Instruments{
-        Instrument{Id: "CS.D.GBPUSD.TODAY.IP", Links: instrumentLinks("CS.D.GBPUSD.TODAY.IP")},
+        getInstrument("CS.D.GBPUSD.TODAY.IP"),
     }
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -51,6 +51,10 @@ func InstrumentsController(w http.ResponseWriter, r *http.Request) {
     if err := json.NewEncoder(w).Encode(instruments); err != nil {
         panic(err)
     }
+}
+
+func getInstrument(id string) Instrument {
+    return Instrument{Id: id, Links: instrumentLinks(id)}
 }
 
 func instrumentLinks(id string) Links {
@@ -66,11 +70,25 @@ func instrumentLinks(id string) Links {
 func InstrumentController(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var instrumentId string = vars["instrumentId"]
-	var instrument = Instrument{Id: instrumentId, Links: instrumentLinks(instrumentId)}
+	var instrument = getInstrument(instrumentId)
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
     if err := json.NewEncoder(w).Encode(instrument); err != nil {
+        panic(err)
+    }
+}
+
+func ResolutionController(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    var instrumentId string = vars["instrumentId"]
+    var resolution string = vars["resolution"]
+    var instrument = getInstrument(instrumentId)
+    var response = Resolution{Instrument: instrument, Resolution: resolution}
+
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    w.WriteHeader(http.StatusOK)
+    if err := json.NewEncoder(w).Encode(response); err != nil {
         panic(err)
     }
 }

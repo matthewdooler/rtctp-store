@@ -19,23 +19,28 @@ var resolutions = []string{
     "DAY"}
 
 type Instrument struct {
-    Id      string    `json:"id"`
-    Links   Links     `json:"links"`
+    Id    string `json:"id"`
+    Links Links  `json:"links"`
 }
 
 type Instruments []Instrument
 
 type Candle struct {
-	Time		time.Time 	`json:"time"`
-	OpenPrice	Quote		`json:"openPrice"`
-	ClosePrice	Quote		`json:"closePrice"`
-	LowPrice	Quote		`json:"lowPrice"`
-	HighPrice	Quote		`json:"highPrice"`
+	Time       time.Time `json:"time"`
+	OpenPrice  Quote     `json:"openPrice"`
+	ClosePrice Quote     `json:"closePrice"`
+	LowPrice   Quote     `json:"lowPrice"`
+	HighPrice  Quote     `json:"highPrice"`
 }
 
 type Candles []Candle
 
 type Quote struct {
-	Ask			float32	`json:"ask"`
-	Bid			float32	`json:"bid"`
+	Ask float32	`json:"ask"`
+	Bid float32	`json:"bid"`
+}
+
+type Resolution struct {
+	Instrument Instrument `json:"instrument"`
+	Resolution string     `json:"resolution"`
 }

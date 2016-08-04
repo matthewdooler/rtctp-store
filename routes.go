@@ -40,4 +40,10 @@ var routes = Routes{
         "/instruments/{instrumentId}",
         InstrumentController,
     },
+    Route{
+        "Resolution",
+        "GET",
+        "/instruments/{instrumentId}/{resolution}",
+        ResolutionController,
+    },
 }
