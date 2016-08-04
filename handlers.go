@@ -3,6 +3,8 @@ package main
 import (
     "net/http"
 	"encoding/json"
+
+	"github.com/gorilla/mux"
 )
 
 type Link struct {
@@ -12,8 +14,10 @@ type Link struct {
 
 type Links []Link
 
+// TODO: rename these to Controller
+
 func Index(w http.ResponseWriter, r *http.Request) {
-    links := Links{
+    var links = Links{
         Link{Rel: "self", Href: config.BaseURI+"/"},
         Link{Rel: "status", Href: config.BaseURI+"/status"},
         Link{Rel: "instruments", Href: config.BaseURI+"/instruments"},
@@ -31,7 +35,7 @@ type Status struct {
 }
 
 func StatusIndex(w http.ResponseWriter, r *http.Request) {
-    status := Status{Status: "OK"}
+    var status = Status{Status: "OK"}
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
     if err := json.NewEncoder(w).Encode(status); err != nil {
@@ -40,7 +44,7 @@ func StatusIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func InstrumentsIndex(w http.ResponseWriter, r *http.Request) {
-    instruments := Instruments{
+    var instruments = Instruments{
         Instrument{Id: "CS.D.GBPUSD.TODAY.IP", Links: instrumentLinks("CS.D.GBPUSD.TODAY.IP")},
     }
 
@@ -52,7 +56,7 @@ func InstrumentsIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func instrumentLinks(id string) Links {
-	links := Links{
+	var links = Links{
         Link{Rel: "self", Href: config.BaseURI+"/instruments/"+id},
     }
 	for _,resolution := range resolutions {
@@ -60,3 +64,16 @@ func instrumentLinks(id string) Links {
 	}
 	return links
 }
+
+func InstrumentIndex(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	var instrumentId string = vars["instrumentId"]
+	var instrument = Instrument{Id: instrumentId, Links: instrumentLinks(instrumentId)}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    w.WriteHeader(http.StatusOK)
+    if err := json.NewEncoder(w).Encode(instrument); err != nil {
+        panic(err)
+    }
+}
+

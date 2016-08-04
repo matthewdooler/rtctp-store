@@ -34,4 +34,10 @@ var routes = Routes{
         "/instruments",
         InstrumentsIndex,
     },
+    Route{
+        "InstrumentIndex",
+        "GET",
+        "/instruments/{instrumentId}",
+        InstrumentIndex,
+    },
 }
