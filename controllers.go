@@ -16,7 +16,7 @@ type Links []Link
 
 // TODO: rename these to Controller
 
-func Index(w http.ResponseWriter, r *http.Request) {
+func IndexController(w http.ResponseWriter, r *http.Request) {
     var links = Links{
         Link{Rel: "self", Href: config.BaseURI+"/"},
         Link{Rel: "status", Href: config.BaseURI+"/status"},
@@ -34,7 +34,7 @@ type Status struct {
     Status      string    `json:"status"`
 }
 
-func StatusIndex(w http.ResponseWriter, r *http.Request) {
+func StatusController(w http.ResponseWriter, r *http.Request) {
     var status = Status{Status: "OK"}
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
@@ -43,7 +43,7 @@ func StatusIndex(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func InstrumentsIndex(w http.ResponseWriter, r *http.Request) {
+func InstrumentsController(w http.ResponseWriter, r *http.Request) {
     var instruments = Instruments{
         Instrument{Id: "CS.D.GBPUSD.TODAY.IP", Links: instrumentLinks("CS.D.GBPUSD.TODAY.IP")},
     }
@@ -65,7 +65,7 @@ func instrumentLinks(id string) Links {
 	return links
 }
 
-func InstrumentIndex(w http.ResponseWriter, r *http.Request) {
+func InstrumentController(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var instrumentId string = vars["instrumentId"]
 	var instrument = Instrument{Id: instrumentId, Links: instrumentLinks(instrumentId)}
