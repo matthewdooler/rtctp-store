@@ -43,5 +43,7 @@ type Quote struct {
 type CandlesResponse struct {
 	Instrument Instrument `json:"instrument"`
 	Resolution string     `json:"resolution"`
-	Candles Candles       `json:"candles"`
+	StartDate  time.Time  `json:"startDate"`
+	EndDate    time.Time  `json:"endDate"`
+	Candles    Candles    `json:"candles"`
 }

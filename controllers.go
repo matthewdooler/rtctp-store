@@ -99,17 +99,20 @@ func AllCandlesController(w http.ResponseWriter, r *http.Request) {
     var instrumentId string = vars["instrumentId"]
     var resolution string = vars["resolution"]
     var instrument = getInstrument(instrumentId)
-    // TODO: Pass in current time as end, and start=end-(resolution*10) (i.e., the past 10 candles)
-    var startDate time.Time = time.Now()
-    var endDate time.Time = time.Now()
+    startDate, endDate := getDateRangeNCandlesAgo(time.Now(), 10, resolution)
     var candles = getCandles(instrumentId, resolution, startDate, endDate)
-    var response = CandlesResponse{Instrument: instrument, Resolution: resolution, Candles: candles}
+    var response = CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
     if err := json.NewEncoder(w).Encode(response); err != nil {
         panic(err)
     }
+}
+
+func getDateRangeNCandlesAgo(now time.Time, candles int, resolution string) (time.Time, time.Time) {
+    // TODO: needs a real impl + test
+    return time.Now(), now
 }
 
 func RangeCandlesController(w http.ResponseWriter, r *http.Request) {
@@ -131,7 +134,7 @@ func RangeCandlesController(w http.ResponseWriter, r *http.Request) {
 
     instrument := getInstrument(instrumentId)
     candles := getCandles(instrumentId, resolution, startDate, endDate)
-    response := CandlesResponse{Instrument: instrument, Resolution: resolution, Candles: candles}
+    response := CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
