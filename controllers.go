@@ -112,7 +112,6 @@ func AllCandlesController(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-// TODO: Return HTTP error instead of panic
 func RangeCandlesController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     instrumentId := vars["instrumentId"]
@@ -120,12 +119,14 @@ func RangeCandlesController(w http.ResponseWriter, r *http.Request) {
 
     startDate, err := time.Parse(time.RFC3339, vars["startDate"])
     if err != nil {
-        panic(err)
+        setHttpError(w, http.StatusBadRequest, "INVALID_START_DATE", "Invalid start date. Must conform to RFC3339.")
+        return
     }
 
     endDate, err := time.Parse(time.RFC3339, vars["endDate"])
     if err != nil {
-        panic(err)
+        setHttpError(w, http.StatusBadRequest, "INVALID_END_DATE", "Invalid end date. Must conform to RFC3339.")
+        return
     }
 
     instrument := getInstrument(instrumentId)
@@ -134,6 +135,26 @@ func RangeCandlesController(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
+    if err := json.NewEncoder(w).Encode(response); err != nil {
+        panic(err)
+    }
+}
+
+type ErrorResponse struct {
+    Error Error `json:"error"`
+}
+
+type Error struct {
+    Code    string `json:"code"`
+    Message string `json:"message"`
+}
+
+func setHttpError(w http.ResponseWriter, statusCode int, errorCode string, errorMessage string) {
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    w.WriteHeader(statusCode)
+    response := ErrorResponse{
+        Error: Error{Code: errorCode, Message: errorMessage},
+    }
     if err := json.NewEncoder(w).Encode(response); err != nil {
         panic(err)
     }
