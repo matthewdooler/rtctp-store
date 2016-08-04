@@ -14,8 +14,6 @@ type Link struct {
 
 type Links []Link
 
-// TODO: rename these to Controller
-
 func IndexController(w http.ResponseWriter, r *http.Request) {
     var links = Links{
         Link{Rel: "self", Href: config.BaseURI+"/"},
