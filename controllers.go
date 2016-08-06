@@ -45,7 +45,7 @@ func StatusController(w http.ResponseWriter, r *http.Request) {
 
 func InstrumentsController(w http.ResponseWriter, r *http.Request) {
     var instruments = Instruments{
-        getInstrument("CS.D.GBPUSD.TODAY.IP"),
+        getInstrument("CS.D.GBPUSD.TODAY.IP", false),
     }
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -55,25 +55,28 @@ func InstrumentsController(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func getInstrument(id string) Instrument {
-    return Instrument{Id: id, Links: instrumentLinks(id)}
+func getInstrument(id string, includeResolutions bool) Instrument {
+    // TODO: Query database to make sure instrument exists
+    return Instrument{Id: id, Links: instrumentLinks(id, includeResolutions)}
 }
 
-func instrumentLinks(id string) Links {
+func instrumentLinks(id string, includeResolutions bool) Links {
 	var links = Links{
         Link{Rel: "self", Href: config.BaseURI+"/instruments/"+id},
     }
-    // TODO: Query database to get all resolutions (don't have to be specific to this instrument - could just be a globally collected list)
-	for _,resolution := range resolutions {
-		links = append(links, Link{Rel: resolution, Href: config.BaseURI+"/instruments/"+id+"/"+resolution})
-	}
+    if includeResolutions {
+        // TODO: Query database to get all resolutions (don't have to be specific to this instrument - could just be a globally collected list)
+    	for _,resolution := range resolutions {
+    		links = append(links, Link{Rel: resolution, Href: config.BaseURI+"/instruments/"+id+"/"+resolution})
+    	}
+    }
 	return links
 }
 
 func InstrumentController(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var instrumentId string = vars["instrumentId"]
-	var instrument = getInstrument(instrumentId)
+	var instrument = getInstrument(instrumentId, true)
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
@@ -98,7 +101,7 @@ func AllCandlesController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     var instrumentId string = vars["instrumentId"]
     var resolution string = vars["resolution"]
-    var instrument = getInstrument(instrumentId)
+    var instrument = getInstrument(instrumentId, false)
     startDate, endDate := getDateRangeNCandlesAgo(time.Now(), 10, resolution)
     var candles = getCandles(instrumentId, resolution, startDate, endDate)
     var response = CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
@@ -132,7 +135,7 @@ func RangeCandlesController(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    instrument := getInstrument(instrumentId)
+    instrument := getInstrument(instrumentId, false)
     candles := getCandles(instrumentId, resolution, startDate, endDate)
     response := CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
 
