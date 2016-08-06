@@ -19,6 +19,7 @@ func main() {
     config = loadConfig()
     router := NewRouter()
 
+    log.Printf("Starting server on port %s", config.Port)
     log.Fatal(http.ListenAndServe(":"+config.Port, router))
 }
 
