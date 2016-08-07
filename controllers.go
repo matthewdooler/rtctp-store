@@ -168,12 +168,25 @@ func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
 
     candles := candlesRequest.Candles
     if candles == nil {
-        setHttpError(w, 422, "MISSING_CANDLES_FIELD", "Candles field must be set in entity JSON.")
+        setHttpError(w, 422, "MISSING_CANDLES_FIELD", "Candles field must be set.")
+        return
+    } else if len(candles) <= 0 {
+        setHttpError(w, 422, "EMPTY_CANDLES_FIELD", "Candles field must contain at least one candle.")
         return
     }
 
+    var startDate time.Time
+    var endDate time.Time
+    for _,candle := range candles {
+        if startDate.IsZero() || candle.Time.Before(startDate) {
+            startDate = candle.Time // TODO: align down
+        }
+        if endDate.IsZero() || candle.Time.After(endDate) {
+            endDate = candle.Time // TODO: align up (i.e., align down then add the resolution)
+        }
+    }
+
     instrument := getInstrument(instrumentId, false)
-    startDate, endDate := getDateRangeNCandlesAgo(time.Now(), 10, resolution) // TODO: these should represent the range that was passed in
     response := CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
