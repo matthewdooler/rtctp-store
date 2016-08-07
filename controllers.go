@@ -177,6 +177,9 @@ func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // TODO: Store candles to the database
+
+    // Work out start and end dates for the response (not really important but nice to return something that makes sense)
     var startDate time.Time
     var endDate time.Time
     for _,candle := range candles {
