@@ -5,6 +5,8 @@ import (
     "encoding/json"
     "math/rand"
     "time"
+    "io"
+    "io/ioutil"
 
     "github.com/gorilla/mux"
 )
@@ -145,6 +147,44 @@ func RangeCandlesController(w http.ResponseWriter, r *http.Request) {
         panic(err)
     }
 }
+
+func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    instrumentId := vars["instrumentId"]
+    resolution := vars["resolution"]
+
+    var candlesRequest CandlesResponse
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576)) // TODO: 1MB? too low?
+    if err != nil {
+        panic(err)
+    }
+    if err := r.Body.Close(); err != nil {
+        panic(err)
+    }
+    if err := json.Unmarshal(body, &candlesRequest); err != nil {
+        setHttpError(w, 422, "UNPROCESSABLE_ENTITY", "Unable to unmarshal entity JSON.")
+        return
+    }
+
+    candles := candlesRequest.Candles
+    if candles == nil {
+        setHttpError(w, 422, "MISSING_CANDLES_FIELD", "Candles field must be set in entity JSON.")
+        return
+    }
+
+    instrument := getInstrument(instrumentId, false)
+    startDate, endDate := getDateRangeNCandlesAgo(time.Now(), 10, resolution) // TODO: these should represent the range that was passed in
+    response := CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
+
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    w.WriteHeader(http.StatusOK)
+    if err := json.NewEncoder(w).Encode(response); err != nil {
+        panic(err)
+    }
+}
+
+
+
 
 type ErrorResponse struct {
     Error Error `json:"error"`
