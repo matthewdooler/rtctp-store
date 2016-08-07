@@ -58,7 +58,7 @@ func InstrumentsController(w http.ResponseWriter, r *http.Request) {
 }
 
 func getInstrument(id string, includeResolutions bool) Instrument {
-    // TODO: Query database to make sure instrument exists
+    // TODO: Query database to make sure instrument exists (cache in memory since this will be called a lot and instruments cannot be deleted)
     return Instrument{Id: id, Links: instrumentLinks(id, includeResolutions)}
 }
 
@@ -68,7 +68,8 @@ func instrumentLinks(id string, includeResolutions bool) Links {
     }
     if includeResolutions {
         // TODO: Query database to get all resolutions (don't have to be specific to this instrument - could just be a globally collected list)
-    	for _,resolution := range resolutions {
+    	// TODO: Some caching (e.g., refresh every 60sec)
+        for _,resolution := range resolutions {
     		links = append(links, Link{Rel: resolution, Href: config.BaseURI+"/instruments/"+id+"/"+resolution})
     	}
     }
@@ -117,6 +118,7 @@ func AllCandlesController(w http.ResponseWriter, r *http.Request) {
 
 func getDateRangeNCandlesAgo(now time.Time, candles int, resolution string) (time.Time, time.Time) {
     // TODO: needs a real impl + test
+    // TODO: needs to be aligned
     return time.Now(), now
 }
 
