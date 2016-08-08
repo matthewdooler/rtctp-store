@@ -41,10 +41,10 @@ var routes = Routes{
         InstrumentController,
     },
     Route{
-        "AllCandles",
+        "Resolution",
         "GET",
         "/instruments/{instrumentId}/{resolution}",
-        AllCandlesController,
+        ResolutionController,
     },
     Route{
         "UpdateCandles",
@@ -56,6 +56,6 @@ var routes = Routes{
         "RangeCandles",
         "GET",
         "/instruments/{instrumentId}/{resolution}/{startDate}/{endDate}",
-        RangeCandlesController,
+        CandlesController,
     },
 }

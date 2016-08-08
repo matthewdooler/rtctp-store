@@ -59,6 +59,7 @@ func InstrumentsController(w http.ResponseWriter, r *http.Request) {
 
 func getInstrument(id string, includeResolutions bool) Instrument {
     // TODO: Query database to make sure instrument exists (cache in memory since this will be called a lot and instruments cannot be deleted)
+    // TODO: Add in links after (this function shouldn't add them.. then we don't need the bool)
     return Instrument{Id: id, Links: instrumentLinks(id, includeResolutions)}
 }
 
@@ -100,7 +101,7 @@ func getCandles(instrumentId string, resolution string, startDate time.Time, end
     }
 }
 
-func AllCandlesController(w http.ResponseWriter, r *http.Request) {
+func ResolutionController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     var instrumentId string = vars["instrumentId"]
     var resolution string = vars["resolution"]
@@ -112,12 +113,11 @@ func AllCandlesController(w http.ResponseWriter, r *http.Request) {
 
     var instrument = getInstrument(instrumentId, false)
     startDate, endDate := getDateRangeNCandlesAgo(time.Now(), 10, resolutionDuration)
-    var candles = getCandles(instrumentId, resolution, startDate, endDate)
-    var response = CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
-
+    instrument.Links = append(instrument.Links, Link{Rel: "recent", Href: config.BaseURI+"/instruments/"+instrumentId+"/"+resolution+"/"+startDate.Format(time.RFC3339)+"/"+endDate.Format(time.RFC3339)})
+    
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
-    if err := json.NewEncoder(w).Encode(response); err != nil {
+    if err := json.NewEncoder(w).Encode(instrument); err != nil {
         panic(err)
     }
 }
@@ -129,7 +129,7 @@ func getDateRangeNCandlesAgo(now time.Time, candles int, resolutionDuration time
     return startDate, endDate
 }
 
-func RangeCandlesController(w http.ResponseWriter, r *http.Request) {
+func CandlesController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     instrumentId := vars["instrumentId"]
     resolution := vars["resolution"]
