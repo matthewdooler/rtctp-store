@@ -104,8 +104,14 @@ func AllCandlesController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     var instrumentId string = vars["instrumentId"]
     var resolution string = vars["resolution"]
+    resolutionDuration := resolutions[resolution]
+    if resolutionDuration == 0 {
+        setHttpError(w, 400, "UNKNOWN_RESOLUTION", "Unknown resolution.")
+        return
+    }
+
     var instrument = getInstrument(instrumentId, false)
-    startDate, endDate := getDateRangeNCandlesAgo(time.Now(), 10, resolution)
+    startDate, endDate := getDateRangeNCandlesAgo(time.Now(), 10, resolutionDuration)
     var candles = getCandles(instrumentId, resolution, startDate, endDate)
     var response = CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
 
@@ -116,28 +122,36 @@ func AllCandlesController(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func getDateRangeNCandlesAgo(now time.Time, candles int, resolution string) (time.Time, time.Time) {
-    // TODO: needs a real impl + test
-    // TODO: needs to be aligned
-    return time.Now(), now
+// TODO: test me
+func getDateRangeNCandlesAgo(now time.Time, candles int, resolutionDuration time.Duration) (time.Time, time.Time) {
+    var endDate = now.Truncate(resolutionDuration)
+    var startDate = endDate.Add(-time.Duration(candles) * resolutionDuration)
+    return startDate, endDate
 }
 
 func RangeCandlesController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     instrumentId := vars["instrumentId"]
     resolution := vars["resolution"]
+    resolutionDuration := resolutions[resolution]
+    if resolutionDuration == 0 {
+        setHttpError(w, 400, "UNKNOWN_RESOLUTION", "Unknown resolution.")
+        return
+    }
 
     startDate, err := time.Parse(time.RFC3339, vars["startDate"])
     if err != nil {
         setHttpError(w, http.StatusBadRequest, "INVALID_START_DATE", "Invalid start date. Must conform to RFC3339.")
         return
     }
+    startDate = startDate.Truncate(resolutionDuration)
 
     endDate, err := time.Parse(time.RFC3339, vars["endDate"])
     if err != nil {
         setHttpError(w, http.StatusBadRequest, "INVALID_END_DATE", "Invalid end date. Must conform to RFC3339.")
         return
     }
+    endDate = endDate.Truncate(resolutionDuration)
 
     instrument := getInstrument(instrumentId, false)
     candles := getCandles(instrumentId, resolution, startDate, endDate)
