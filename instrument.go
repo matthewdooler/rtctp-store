@@ -4,19 +4,20 @@ import (
     "time"
 )
 
-var resolutions = []string{
-    "SECOND",
-    "MINUTE",
-    "MINUTE_2",
-    "MINUTE_5",
-    "MINUTE_10",
-    "MINUTE_15",
-    "MINUTE_30",
-    "HOUR",
-    "HOUR_2",
-    "HOUR_3",
-    "HOUR_4",
-    "DAY"}
+var resolutions = map[string]time.Duration{
+    "SECOND": time.Second,
+    "MINUTE": time.Minute,
+    "MINUTE_2": 2*time.Minute,
+    "MINUTE_5": 5*time.Minute,
+    "MINUTE_10": 10*time.Minute,
+    "MINUTE_15": 15*time.Minute,
+    "MINUTE_30": 30*time.Minute,
+    "HOUR": time.Hour,
+    "HOUR_2": 2*time.Hour,
+    "HOUR_3": 3*time.Hour,
+    "HOUR_4": 4*time.Hour,
+    "DAY": 24*time.Hour,
+}
 
 type Instrument struct {
     Id    string `json:"id"`

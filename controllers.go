@@ -69,7 +69,7 @@ func instrumentLinks(id string, includeResolutions bool) Links {
     if includeResolutions {
         // TODO: Query database to get all resolutions (don't have to be specific to this instrument - could just be a globally collected list)
     	// TODO: Some caching (e.g., refresh every 60sec)
-        for _,resolution := range resolutions {
+        for resolution,_ := range resolutions {
     		links = append(links, Link{Rel: resolution, Href: config.BaseURI+"/instruments/"+id+"/"+resolution})
     	}
     }
@@ -154,6 +154,11 @@ func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     instrumentId := vars["instrumentId"]
     resolution := vars["resolution"]
+    resolutionDuration := resolutions[resolution]
+    if resolutionDuration == 0 {
+        setHttpError(w, 400, "UNKNOWN_RESOLUTION", "Unknown resolution.")
+        return
+    }
 
     var candlesRequest CandlesResponse
     body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576)) // TODO: 1MB? too low?
@@ -177,22 +182,19 @@ func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // TODO: Store candles to the database
+    // Dates must be aligned to enforce consistency
+    candles = truncateCandleDates(candles, resolutionDuration)
 
-    // Work out start and end dates for the response (not really important but nice to return something that makes sense)
-    var startDate time.Time
-    var endDate time.Time
-    for _,candle := range candles {
-        if startDate.IsZero() || candle.Time.Before(startDate) {
-            startDate = candle.Time // TODO: align down
-        }
-        if endDate.IsZero() || candle.Time.After(endDate) {
-            endDate = candle.Time // TODO: align up (i.e., align down then add the resolution)
-        }
-    }
+    // TODO: Remove duplicates (truncation may have caused duplication)
+    // TODO: ^ func + test
+
+    // Work out start and end dates for the response
+    startDate, endDate := candlesDateRange(candles)
 
     instrument := getInstrument(instrumentId, false)
     response := CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
+
+    // TODO: Store candles to the database
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
@@ -201,8 +203,30 @@ func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+// TODO: test me
+func truncateCandleDates(candles []Candle, resolutionDuration time.Duration) []Candle {
+    truncatedCandles := Candles{}
+    for _,candle := range candles {
+        candle.Time = candle.Time.Truncate(resolutionDuration)
+        truncatedCandles = append(truncatedCandles, candle)
+    }
+    return truncatedCandles
+}
 
-
+// TODO: test me
+func candlesDateRange(candles []Candle) (time.Time, time.Time) {
+    var startDate time.Time
+    var endDate time.Time
+    for _,candle := range candles {
+        if startDate.IsZero() || candle.Time.Before(startDate) {
+            startDate = candle.Time
+        }
+        if endDate.IsZero() || candle.Time.After(endDate) {
+            endDate = candle.Time
+        }
+    }
+    return startDate, endDate
+}
 
 type ErrorResponse struct {
     Error Error `json:"error"`
