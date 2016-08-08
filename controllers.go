@@ -185,8 +185,8 @@ func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
     // Dates must be aligned to enforce consistency
     candles = truncateCandleDates(candles, resolutionDuration)
 
-    // TODO: Remove duplicates (truncation may have caused duplication)
-    // TODO: ^ func + test
+    // Remove duplicates by date (truncation may have caused duplication)
+    candles = removeDuplicateCandles(candles)
 
     // Work out start and end dates for the response
     startDate, endDate := candlesDateRange(candles)
@@ -226,6 +226,19 @@ func candlesDateRange(candles []Candle) (time.Time, time.Time) {
         }
     }
     return startDate, endDate
+}
+
+// TODO: test me
+func removeDuplicateCandles(candles []Candle) []Candle {
+    result := []Candle{}
+    seen := map[time.Time]Candle{}
+    for _, val := range candles {
+        if _, ok := seen[val.Time]; !ok {
+            result = append(result, val)
+            seen[val.Time] = val
+        }
+    }
+    return result
 }
 
 type ErrorResponse struct {
