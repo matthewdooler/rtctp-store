@@ -92,6 +92,7 @@ type DBCandle struct {
 }
 
 func persistCandle(dbContext DBContext, candle Candle, instrument string, resolution string) bool {
+	candle.Time = candle.Time.UTC()
 	path := "candle:" + instrument + ":" + resolution + ":" + candle.Time.Format(time.RFC3339)
 	dbCandle := DBCandle{
 		Type: "candle",
