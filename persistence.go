@@ -2,6 +2,7 @@ package main
 
 import (
     "log"
+    "time"
     // "database/sql"
     // _ "github.com/couchbase/go_n1ql"
     // couchbase "github.com/couchbase/go-couchbase"
@@ -67,12 +68,39 @@ func testdb() {
 
 }
 
-func dbConnect() (*gocb.Cluster, *gocb.Bucket) {
+type DBContext struct {
+	Cluster *gocb.Cluster
+	Bucket *gocb.Bucket
+}
+
+func dbConnect() DBContext {
 	// TODO: error handling! :O
 	cluster, _ := gocb.Connect("couchbase://ezra.heart")
 	bucket, _ := cluster.OpenBucket("rtctp-store", "")
-	return cluster, bucket
+	return DBContext{
+		Cluster: cluster,
+		Bucket: bucket,
+	}
 }
 
+// Wrapper around Candle which includes resolution and instrument, to support indexing and searching
+type DBCandle struct {
+	Type          string  `json:"type"`
+	Candle        Candle  `json:"candle"`
+	Instrument  string  `json:"instrument"`
+	Resolution    string  `json:"resolution"`
+}
+
+func persistCandle(dbContext DBContext, candle Candle, instrument string, resolution string) bool {
+	path := "candle:" + instrument + ":" + resolution + ":" + candle.Time.Format(time.RFC3339)
+	dbCandle := DBCandle{
+		Type: "candle",
+		Candle: candle,
+		Instrument: instrument,
+		Resolution: resolution,
+	}
+	dbContext.Bucket.Upsert(path, dbCandle, 0)
+	return true // TODO: return true or false depending on whether or not it worked
+}
 
 

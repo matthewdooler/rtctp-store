@@ -7,6 +7,7 @@ import (
     "time"
     "io"
     "io/ioutil"
+    "strings"
 
     "github.com/gorilla/mux"
 )
@@ -37,7 +38,6 @@ type Status struct {
 }
 
 func StatusController(w http.ResponseWriter, r *http.Request) {
-    testdb()
     var status = Status{Status: "OK"}
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
@@ -80,7 +80,7 @@ func instrumentLinks(id string, includeResolutions bool) Links {
 
 func InstrumentController(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var instrumentId string = vars["instrumentId"]
+	var instrumentId string = strings.ToUpper(vars["instrumentId"])
 	var instrument = getInstrument(instrumentId, true)
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -104,8 +104,8 @@ func getCandles(instrumentId string, resolution string, startDate time.Time, end
 
 func ResolutionController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    var instrumentId string = vars["instrumentId"]
-    var resolution string = vars["resolution"]
+    var instrumentId string = strings.ToUpper(vars["instrumentId"])
+    var resolution string = strings.ToUpper(vars["resolution"])
     resolutionDuration := resolutions[resolution]
     if resolutionDuration == 0 {
         setHttpError(w, 400, "UNKNOWN_RESOLUTION", "Unknown resolution.")
@@ -132,8 +132,8 @@ func getDateRangeNCandlesAgo(now time.Time, candles int, resolutionDuration time
 
 func CandlesController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    instrumentId := vars["instrumentId"]
-    resolution := vars["resolution"]
+    instrumentId := strings.ToUpper(vars["instrumentId"])
+    resolution := strings.ToUpper(vars["resolution"])
     resolutionDuration := resolutions[resolution]
     if resolutionDuration == 0 {
         setHttpError(w, 400, "UNKNOWN_RESOLUTION", "Unknown resolution.")
@@ -167,8 +167,8 @@ func CandlesController(w http.ResponseWriter, r *http.Request) {
 
 func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    instrumentId := vars["instrumentId"]
-    resolution := vars["resolution"]
+    instrumentId := strings.ToUpper(vars["instrumentId"])
+    resolution := strings.ToUpper(vars["resolution"])
     resolutionDuration := resolutions[resolution]
     if resolutionDuration == 0 {
         setHttpError(w, 400, "UNKNOWN_RESOLUTION", "Unknown resolution.")
@@ -209,7 +209,14 @@ func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
     instrument := getInstrument(instrumentId, false)
     response := CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
 
-    // TODO: Store candles to the database
+    // Store candles to the database
+    for _,candle := range candles {
+        persisted := persistCandle(dbContext, candle, instrumentId, resolution)
+        if !persisted {
+            setHttpError(w, 500, "INTERNAL_ERROR", "An internal error occurred while trying to save a candle. Some candles may have been saved successfully.")
+            return
+        }
+    }
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)

@@ -13,9 +13,11 @@ type Configuration struct {
 }
 
 var config Configuration
+var dbContext DBContext
 
 func main() {
 
+    dbContext = dbConnect()
     config = loadConfig()
     router := NewRouter()
 
