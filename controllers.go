@@ -37,6 +37,7 @@ type Status struct {
 }
 
 func StatusController(w http.ResponseWriter, r *http.Request) {
+    testdb()
     var status = Status{Status: "OK"}
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
