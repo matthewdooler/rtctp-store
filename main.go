@@ -17,8 +17,8 @@ var dbContext DBContext
 
 func main() {
 
-    dbContext, err := dbConnect()
-    dbContext = dbContext
+    db, err := dbConnect()
+    dbContext = db
     if err != nil {
         log.Printf("error connecting to database: %s", err)
         return

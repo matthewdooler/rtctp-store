@@ -23,7 +23,7 @@ func dbConnect() (DBContext, error) {
 	if err != nil {
 		return DBContext{}, errors.New("unable to connect: " + err.Error())
 	}
-	bucket, err := cluster.OpenBucket("rtctp-store", "")
+	bucket, err := cluster.OpenBucket("rtctp-store", "rtctp-store")
 	if err != nil {
 		return DBContext{}, errors.New("unable to open bucket: " + err.Error())
 	}
