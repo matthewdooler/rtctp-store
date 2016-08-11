@@ -17,7 +17,12 @@ var dbContext DBContext
 
 func main() {
 
-    dbContext = dbConnect()
+    dbContext, err := dbConnect()
+    dbContext = dbContext
+    if err != nil {
+        log.Printf("error connecting to database: %s", err)
+        return
+    }
     config = loadConfig()
     router := NewRouter()
 

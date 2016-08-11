@@ -3,7 +3,6 @@ package main
 import (
     "net/http"
     "encoding/json"
-    "math/rand"
     "time"
     "io"
     "io/ioutil"
@@ -90,18 +89,6 @@ func InstrumentController(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func getCandles(instrumentId string, resolution string, startDate time.Time, endDate time.Time) Candles {
-    // TODO: Retrieve candles from database
-    var quote = Quote{Ask: rand.Float32()*1000, Bid: rand.Float32()*1000}
-    return Candles{
-        Candle{Time: time.Now(), OpenPrice: quote, ClosePrice: quote, LowPrice: quote, HighPrice: quote},
-        Candle{Time: time.Now(), OpenPrice: quote, ClosePrice: quote, LowPrice: quote, HighPrice: quote},
-        Candle{Time: time.Now(), OpenPrice: quote, ClosePrice: quote, LowPrice: quote, HighPrice: quote},
-        Candle{Time: time.Now(), OpenPrice: quote, ClosePrice: quote, LowPrice: quote, HighPrice: quote},
-        Candle{Time: time.Now(), OpenPrice: quote, ClosePrice: quote, LowPrice: quote, HighPrice: quote},
-    }
-}
-
 func ResolutionController(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     var instrumentId string = strings.ToUpper(vars["instrumentId"])
@@ -155,7 +142,7 @@ func CandlesController(w http.ResponseWriter, r *http.Request) {
     endDate = endDate.Truncate(resolutionDuration)
 
     instrument := getInstrument(instrumentId, false)
-    candles := getCandles(instrumentId, resolution, startDate, endDate)
+    candles := getCandles(dbContext, instrumentId, resolution, startDate, endDate)
     response := CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
