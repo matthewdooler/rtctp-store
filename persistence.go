@@ -54,14 +54,14 @@ func persistCandle(dbContext DBContext, candle Candle, instrument string, resolu
 	return true // TODO: return true or false depending on whether or not it worked
 }
 
-func getCandles(dbContext DBContext, instrumentId string, resolution string, startDate time.Time, endDate time.Time) Candles {
+func getCandles(dbContext DBContext, instrumentId string, resolution string, startDate time.Time, endDate time.Time) (Candles, error) {
 	
+	// TODO: key-value loookups potentially faster?
+
 	query := gocb.NewN1qlQuery("SELECT * FROM `rtctp-store`")
 	rows, err := dbContext.Bucket.ExecuteN1qlQuery(query, []interface{}{})
 	if err != nil {
-		// TODO: handle error
-		log.Printf("Error running N1QL query: %s", err)
-		return Candles{}
+		return Candles{}, errors.New("unable to run query: " + err.Error())
 	}
 
 	var row interface{}
@@ -71,6 +71,6 @@ func getCandles(dbContext DBContext, instrumentId string, resolution string, sta
 
 	return Candles{
 
-	}
+	}, nil
 }
 
