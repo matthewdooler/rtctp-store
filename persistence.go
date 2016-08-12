@@ -18,12 +18,13 @@ type DBContext struct {
 // TODO: use standard go err handling for all these, so that we can display errors from the api
 // TODO: reconnect on error (easily test it by restarting couchbase during a run)
 
-func dbConnect() (DBContext, error) {
-	cluster, err := gocb.Connect("couchbase://ezra.heart")
+func dbConnect(host string, bucketName string, password string) (DBContext, error) {
+	log.Printf("Connecting to database: %s@%s", bucketName, host)
+	cluster, err := gocb.Connect(host)
 	if err != nil {
 		return DBContext{}, errors.New("unable to connect: " + err.Error())
 	}
-	bucket, err := cluster.OpenBucket("rtctp-store", "rtctp-store")
+	bucket, err := cluster.OpenBucket(bucketName, password)
 	if err != nil {
 		return DBContext{}, errors.New("unable to open bucket: " + err.Error())
 	}
@@ -41,7 +42,7 @@ type DBCandle struct {
 	Resolution  string  `json:"resolution"`
 }
 
-func persistCandle(dbContext DBContext, candle Candle, instrument string, resolution string) bool {
+func persistCandle(dbContext DBContext, candle Candle, instrument string, resolution string) error {
 	candle.Time = candle.Time.UTC()
 	path := "candle:" + instrument + ":" + resolution + ":" + candle.Time.Format(time.RFC3339)
 	dbCandle := DBCandle{
@@ -50,8 +51,8 @@ func persistCandle(dbContext DBContext, candle Candle, instrument string, resolu
 		Instrument: instrument,
 		Resolution: resolution,
 	}
-	dbContext.Bucket.Upsert(path, dbCandle, 0)
-	return true // TODO: return true or false depending on whether or not it worked
+	_, err := dbContext.Bucket.Upsert(path, dbCandle, 0)
+	return err
 }
 
 func getCandles(dbContext DBContext, instrumentId string, resolution string, startDate time.Time, endDate time.Time) (Candles, error) {

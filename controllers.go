@@ -203,9 +203,9 @@ func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
 
     // Store candles to the database
     for _,candle := range candles {
-        persisted := persistCandle(dbContext, candle, instrumentId, resolution)
-        if !persisted {
-            setHttpError(w, 500, "INTERNAL_ERROR", "An internal error occurred while trying to save a candle. Some candles may have been saved successfully.")
+        err := persistCandle(dbContext, candle, instrumentId, resolution)
+        if err != nil {
+            setHttpError(w, 500, "INTERNAL_ERROR", "An internal error occurred while trying to save a candle: " + err.Error())
             return
         }
     }
