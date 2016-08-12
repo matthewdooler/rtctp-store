@@ -1,4 +1,7 @@
 {
 	"Port": "8042",
-	"BaseURI": "http://127.0.0.1:8042"
+	"BaseURI": "http://127.0.0.1:8042",
+	"DBHost": "couchbase://ezra.heart",
+	"DBBucket": "rtctp-store",
+	"DBPassword": "rtctp-store"
 }
