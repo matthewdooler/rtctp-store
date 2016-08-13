@@ -42,9 +42,15 @@ type DBCandle struct {
 	Resolution  string  `json:"resolution"`
 }
 
+// TODO: test me
+func getPath(instrument string, resolution string, candleTime time.Time) string {
+	return "candle:" + instrument + ":" + resolution + ":" + candleTime.Format(time.RFC3339)
+}
+
+// TODO: can we bulk write?
 func persistCandle(dbContext DBContext, candle Candle, instrument string, resolution string) error {
 	candle.Time = candle.Time.UTC()
-	path := "candle:" + instrument + ":" + resolution + ":" + candle.Time.Format(time.RFC3339)
+	path := getPath(instrument, resolution, candle.Time)
 	dbCandle := DBCandle{
 		Type: "candle",
 		Candle: candle,
@@ -55,23 +61,43 @@ func persistCandle(dbContext DBContext, candle Candle, instrument string, resolu
 	return err
 }
 
-func getCandles(dbContext DBContext, instrumentId string, resolution string, startDate time.Time, endDate time.Time) (Candles, error) {
-	
-	// TODO: key-value loookups potentially faster?
+func getCandles(dbContext DBContext, instrument string, resolution string, resolutionDuration time.Duration, startDate time.Time, endDate time.Time) (Candles, error) {
+	startDate = startDate.UTC()
+	endDate = endDate.UTC()
 
-	query := gocb.NewN1qlQuery("SELECT * FROM `rtctp-store`")
-	rows, err := dbContext.Bucket.ExecuteN1qlQuery(query, []interface{}{})
-	if err != nil {
-		return Candles{}, errors.New("unable to run query: " + err.Error())
+	// TODO: are key-value loookups faster?
+
+	// query := gocb.NewN1qlQuery("SELECT * FROM `rtctp-store`")
+	// rows, err := dbContext.Bucket.ExecuteN1qlQuery(query, []interface{}{})
+	// if err != nil {
+	// 	return Candles{}, errors.New("unable to run query: " + err.Error())
+	// }
+
+	// var row interface{}
+	// for rows.Next(&row) {
+	// 	log.Printf("Row: %v", row)
+	// }
+
+	var candles = Candles{}
+
+	var candleTime time.Time = startDate
+	var path string
+	for !candleTime.After(endDate) {
+		path = getPath(instrument, resolution, candleTime)
+		candleTime = candleTime.Add(resolutionDuration)
+
+		var candle Candle
+		_, err := dbContext.Bucket.Get(path, &candle)
+		if(err != nil) {
+			errString := err.Error()
+			if errString != "Key not found." {
+				return candles, errors.New("unable to retrieve candle: " + errString)
+			}
+		} else {
+			candles = append(candles, candle)
+		}
 	}
 
-	var row interface{}
-	for rows.Next(&row) {
-		log.Printf("Row: %v", row)
-	}
-
-	return Candles{
-
-	}, nil
+	return candles, nil
 }
 

@@ -142,7 +142,7 @@ func CandlesController(w http.ResponseWriter, r *http.Request) {
     endDate = endDate.Truncate(resolutionDuration)
 
     instrument := getInstrument(instrumentId, false)
-    candles, err := getCandles(dbContext, instrumentId, resolution, startDate, endDate)
+    candles, err := getCandles(dbContext, instrumentId, resolution, resolutionDuration, startDate, endDate)
     if err != nil {
         setHttpError(w, 500, "INTERNAL_ERROR", "An internal error occurred while trying to retrieve candles: " + err.Error())
         return
