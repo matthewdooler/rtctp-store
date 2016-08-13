@@ -65,36 +65,25 @@ func getCandles(dbContext DBContext, instrument string, resolution string, resol
 	startDate = startDate.UTC()
 	endDate = endDate.UTC()
 
-	// TODO: are key-value loookups faster?
-
-	// query := gocb.NewN1qlQuery("SELECT * FROM `rtctp-store`")
-	// rows, err := dbContext.Bucket.ExecuteN1qlQuery(query, []interface{}{})
-	// if err != nil {
-	// 	return Candles{}, errors.New("unable to run query: " + err.Error())
-	// }
-
-	// var row interface{}
-	// for rows.Next(&row) {
-	// 	log.Printf("Row: %v", row)
-	// }
-
 	var candles = Candles{}
+	var itemsGet []gocb.BulkOp
 
 	var candleTime time.Time = startDate
-	var path string
 	for !candleTime.After(endDate) {
-		path = getPath(instrument, resolution, candleTime)
+		path := getPath(instrument, resolution, candleTime)
 		candleTime = candleTime.Add(resolutionDuration)
+		itemsGet = append(itemsGet, &gocb.GetOp{Key: path, Value: &DBCandle{}})
+	}
+	log.Printf("Attempting to retrieve %d candles", len(itemsGet))
+	err := dbContext.Bucket.Do(itemsGet)
+	if err != nil {
+		return candles, errors.New("unable to retrieve candles: " + err.Error())
+	}
 
-		var candle Candle
-		_, err := dbContext.Bucket.Get(path, &candle)
-		if(err != nil) {
-			errString := err.Error()
-			if errString != "Key not found." {
-				return candles, errors.New("unable to retrieve candle: " + errString)
-			}
-		} else {
-			candles = append(candles, candle)
+	for i := 0; i < len(itemsGet); i++ {
+		result := itemsGet[i].(*gocb.GetOp)
+		if result.Err == nil {
+			candles = append(candles, (*result.Value.(*DBCandle)).Candle)
 		}
 	}
 
