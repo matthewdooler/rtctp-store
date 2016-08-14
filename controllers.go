@@ -202,12 +202,10 @@ func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
     response := CandlesResponse{Instrument: instrument, Resolution: resolution, StartDate: startDate, EndDate: endDate, Candles: candles}
 
     // Store candles to the database
-    for _,candle := range candles {
-        err := persistCandle(dbContext, candle, instrumentId, resolution)
-        if err != nil {
-            setHttpError(w, 500, "INTERNAL_ERROR", "An internal error occurred while trying to save a candle: " + err.Error())
-            return
-        }
+    err = persistCandles(dbContext, candles, instrumentId, resolution)
+    if err != nil {
+        setHttpError(w, 500, "INTERNAL_ERROR", "An internal error occurred while trying to save candles: " + err.Error())
+        return
     }
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")

@@ -15,8 +15,7 @@ type DBContext struct {
 	Bucket *gocb.Bucket
 }
 
-// TODO: use standard go err handling for all these, so that we can display errors from the api
-// TODO: reconnect on error (easily test it by restarting couchbase during a run)
+// TODO: does cb reconnect on error?
 
 func dbConnect(host string, bucketName string, password string) (DBContext, error) {
 	log.Printf("Connecting to database: %s@%s", bucketName, host)
@@ -47,18 +46,21 @@ func getPath(instrument string, resolution string, candleTime time.Time) string 
 	return "candle:" + instrument + ":" + resolution + ":" + candleTime.Format(time.RFC3339)
 }
 
-// TODO: can we bulk write?
-func persistCandle(dbContext DBContext, candle Candle, instrument string, resolution string) error {
-	candle.Time = candle.Time.UTC()
-	path := getPath(instrument, resolution, candle.Time)
-	dbCandle := DBCandle{
-		Type: "candle",
-		Candle: candle,
-		Instrument: instrument,
-		Resolution: resolution,
+func persistCandles(dbContext DBContext, candles Candles, instrument string, resolution string) error {
+	var upsertOps []gocb.BulkOp
+	for _,candle := range candles {
+		candle.Time = candle.Time.UTC()
+		path := getPath(instrument, resolution, candle.Time)
+		dbCandle := DBCandle{
+			Type: "candle",
+			Candle: candle,
+			Instrument: instrument,
+			Resolution: resolution,
+		}
+		upsertOps = append(upsertOps, &gocb.UpsertOp{Key: path, Value: dbCandle, Expiry: 0})
 	}
-	_, err := dbContext.Bucket.Upsert(path, dbCandle, 0)
-	return err
+
+	return dbContext.Bucket.Do(upsertOps)
 }
 
 func getCandles(dbContext DBContext, instrument string, resolution string, resolutionDuration time.Duration, startDate time.Time, endDate time.Time) (Candles, error) {
