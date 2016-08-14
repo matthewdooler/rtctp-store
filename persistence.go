@@ -75,18 +75,33 @@ func getCandles(dbContext DBContext, instrument string, resolution string, resol
 		itemsGet = append(itemsGet, &gocb.GetOp{Key: path, Value: &DBCandle{}})
 	}
 	log.Printf("Attempting to retrieve %d candles", len(itemsGet))
-	err := dbContext.Bucket.Do(itemsGet)
-	if err != nil {
-		return candles, errors.New("unable to retrieve candles: " + err.Error())
-	}
 
-	for i := 0; i < len(itemsGet); i++ {
-		result := itemsGet[i].(*gocb.GetOp)
-		if result.Err == nil {
-			candles = append(candles, (*result.Value.(*DBCandle)).Candle)
+	batchSize := 5000 // can't handle much more than 5000 in bulk, although seems intermittent
+
+	for i := 0; i < len(itemsGet); i += batchSize {
+	    itemsGetBatch := itemsGet[i:min(i+batchSize, len(itemsGet))]
+		err := dbContext.Bucket.Do(itemsGetBatch)
+		if err != nil {
+			return candles, errors.New("unable to retrieve candles: " + err.Error())
+		}
+
+		for i := 0; i < len(itemsGetBatch); i++ {
+			result := itemsGetBatch[i].(*gocb.GetOp)
+			if result.Err == nil {
+				candles = append(candles, (*result.Value.(*DBCandle)).Candle)
+			} else if result.Err.Error() != "Key not found." {
+				return candles, errors.New("unable to retrieve candle: " + result.Err.Error())
+			}
 		}
 	}
 
 	return candles, nil
+}
+
+func min(a, b int) int {
+    if a <= b {
+        return a
+    }
+    return b
 }
 
