@@ -168,7 +168,7 @@ func UpdateCandlesController(w http.ResponseWriter, r *http.Request) {
     }
 
     var candlesRequest CandlesResponse
-    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576)) // TODO: 1MB? too low?
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 50*1048576)) // 50MB
     if err != nil {
         panic(err)
     }
